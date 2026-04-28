@@ -66,7 +66,9 @@ const Home = () => {
         )}
 
         {isSearching && (
-          <p className="text-sm text-gray-500 mb-4">Showing filtered results</p>
+          <p className="text-sm text-gray-500 mb-4">
+            Showing results from loaded Pokémon only
+          </p>
         )}
 
         {listQuery.isLoading || typeQuery.isLoading ? (
