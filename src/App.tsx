@@ -1,5 +1,11 @@
+import Home from "./Pages/Home";
+
 function App() {
-  return <div className="bg-blue-400">Hellow</div>;
+  return (
+    <div>
+      <Home />
+    </div>
+  );
 }
 
 export default App;
