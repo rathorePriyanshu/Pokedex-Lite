@@ -9,27 +9,35 @@ import type { PokemonListItempAPI, PokemonTypeItemAPI } from "../types/pokemon";
 import { useDebounceSearch } from "../hooks/useDebounce";
 import PokemonModal from "../Components/PokemonModal";
 import SkeletonGrid from "../Components/UI/SkeletonGrid";
+import { useAllPokemon } from "../hooks/useAllPokemon";
 
 const Home = () => {
   const { type, search } = usePokemonStore();
   const debounced = useDebounceSearch(search);
-  const isSearching = debounced.length > 0;
+  const isSearching = debounced.trim().length > 0;
 
+  const allQuery = useAllPokemon(isSearching);
   const listQuery = usePokemonList();
   const typeQuery = usePokemonType(type);
 
   const [selected, setSelected] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
-    const noramlizedPokemonList: PokemonListItempAPI[] = type
+  const normalizedPokemonList = useMemo(() => {
+    return type
       ? (typeQuery.data?.pokemon.map((p: PokemonTypeItemAPI) => p.pokemon) ??
-        [])
+          [])
       : (listQuery.data?.pages.flatMap((p) => p.results) ?? []);
+  }, [type, typeQuery.data, listQuery.data]);
 
-    return noramlizedPokemonList.filter((p) =>
+  const filtered = useMemo(() => {
+    if (!isSearching) return normalizedPokemonList;
+
+    const allPokemonList: PokemonListItempAPI[] = allQuery.data?.results ?? [];
+
+    return allPokemonList.filter((p) =>
       p.name.toLowerCase().includes(debounced.toLowerCase()),
     );
-  }, [type, typeQuery.data, listQuery.data, debounced]);
+  }, [isSearching, debounced, normalizedPokemonList, allQuery.data]);
 
   if (listQuery.isError || typeQuery.isError) {
     return (
@@ -38,6 +46,12 @@ const Home = () => {
       </div>
     );
   }
+
+  const finalData = isSearching ? filtered : normalizedPokemonList;
+  const isLoading =
+    listQuery.isLoading ||
+    typeQuery.isLoading ||
+    (isSearching && allQuery.isLoading);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -67,14 +81,14 @@ const Home = () => {
 
         {isSearching && (
           <p className="text-sm text-gray-500 mb-4">
-            Showing results from loaded Pokémon only
+            Searching across all Pokémon
           </p>
         )}
 
-        {listQuery.isLoading || typeQuery.isLoading ? (
+        {isLoading ? (
           <SkeletonGrid />
         ) : (
-          <PokemonGrid data={filtered} onSelect={setSelected} />
+          <PokemonGrid data={finalData} onSelect={setSelected} />
         )}
 
         {!type && !isSearching && (
