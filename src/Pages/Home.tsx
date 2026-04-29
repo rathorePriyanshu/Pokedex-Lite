@@ -18,16 +18,17 @@ const Home = () => {
 
   const allQuery = useAllPokemon(isSearching);
   const listQuery = usePokemonList();
-  const typeQuery = usePokemonType(type);
+  const effectiveType = isSearching ? "" : type;
+  const typeQuery = usePokemonType(effectiveType);
 
   const [selected, setSelected] = useState<string | null>(null);
 
   const normalizedPokemonList = useMemo(() => {
-    return type
+    return effectiveType
       ? (typeQuery.data?.pokemon.map((p: PokemonTypeItemAPI) => p.pokemon) ??
           [])
       : (listQuery.data?.pages.flatMap((p) => p.results) ?? []);
-  }, [type, typeQuery.data, listQuery.data]);
+  }, [effectiveType, typeQuery.data, listQuery.data]);
 
   const filtered = useMemo(() => {
     if (!isSearching) return normalizedPokemonList;
@@ -72,18 +73,15 @@ const Home = () => {
           </div>
         </div>
 
-        {type && (
-          <p className="text-sm text-gray-500 mb-4">
-            Showing all <span className="font-medium capitalize">{type}</span>{" "}
-            Pokémon
-          </p>
-        )}
-
-        {isSearching && (
+        {isSearching ? (
           <p className="text-sm text-gray-500 mb-4">
             Searching across all Pokémon
           </p>
-        )}
+        ) : type ? (
+          <p className="text-sm text-gray-500 mb-4">
+            Showing all <span className="capitalize">{type}</span> Pokémon
+          </p>
+        ) : null}
 
         {isLoading ? (
           <SkeletonGrid />
